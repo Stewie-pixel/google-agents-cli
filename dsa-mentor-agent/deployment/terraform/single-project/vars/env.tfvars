@@ -1,5 +1,5 @@
 # Project name used for resource naming
-project_name = "customer-support-agent"
+project_name = "dsa-mentor-agent"
 
 # Your Google Cloud project id
 project_id = "your-gcp-project-id"

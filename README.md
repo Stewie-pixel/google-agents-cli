@@ -1,89 +1,95 @@
-# customer-support-agent
+# DSA Mentor Agent
 
-Customer Support Graph Workflow Agent
-Agent generated with `agents-cli` version `0.5.0`
+DSA Study Mentor Agent — powered by Google ADK & Gemini
 
-## Project Structure
+Analyzes your LeetCode solve history, identifies weak DSA topics, and generates a personalized daily study plan with curated problems and YouTube video resources.
 
-```
-customer-support-agent/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   ├── agent_runtime_app.py    # Agent Runtime application logic
-│   └── app_utils/             # App utilities and helpers
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
-```
+## Prerequisites
 
-> 💡 **Tip:** Use [Gemini CLI](https://github.com/google-gemini/gemini-cli) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
+- **uv** — [Install](https://docs.astral.sh/uv/)
+- **Gemini API Key** — [Get one free at AI Studio](https://aistudio.google.com/apikey) *(create a new project with no billing enabled for the free tier)*
+- **Serper API Key** — [Get one free at serper.dev](https://serper.dev) *(optional — used to find YouTube videos)*
 
-## Requirements
+## Setup
 
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
-
-
-## Quick Start
-
-Install `agents-cli` and its skills if not already installed:
+### 1. Clone the repo with submodules
 
 ```bash
-uvx google-agents-cli setup
+git clone --recurse-submodules https://github.com/Stewie-pixel/google-agents-cli.git
+cd google-agents-cli/dsa-mentor-agent
 ```
 
-Install required packages:
+If you already cloned without submodules:
 
 ```bash
-agents-cli install
+git submodule update --init --recursive
 ```
 
-Test the agent with a local web server:
+### 2. Set up environment variables
 
 ```bash
-agents-cli playground
+cp .env.example .env
 ```
 
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
+Open `.env` and fill in your keys:
 
-## Commands
+```
+GEMINI_API_KEY=your_gemini_api_key_here
+SERPER_API_KEY=your_serper_api_key_here
+```
 
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
-| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
-| `agents-cli deploy`  | Deploy agent to Agent Runtime                                                                |
-| `agents-cli publish gemini-enterprise` | Register deployed agent to Gemini Enterprise                    |
-
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
-
----
-
-## Development
-
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
-
-## Deployment
+### 3. Install dependencies
 
 ```bash
-gcloud config set project <your-project-id>
-agents-cli deploy
+uv sync
 ```
 
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
+### 4. Launch the agent
 
-## Observability
+```bash
+uv run adk web
+```
 
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+Then open **http://localhost:8000** in your browser.
+
+## Usage
+
+Once the web UI is open, select **app** from the dropdown and type any of the following:
+
+| What you want | What to type |
+|---|---|
+| Get today's study plan | `Generate my study plan for today` |
+| See your weak topics | `What are my weakest DSA topics?` |
+| Focus on a specific topic | `I want to practice Dynamic Programming today` |
+| Get problems for a topic | `Give me 3 Binary Search problems` |
+
+Generated study plans are saved to:
+
+```
+claude-with-leetcode/study_plan/plan_YYYY-MM-DD.md
+```
+
+>[!IMPORTANT]
+> The study plan is generated based on each user Leetcode history and therefore unique to them. Do not commit your study plan on the submodule 
+
+## How It Works
+
+The agent runs three tools automatically in a single turn:
+
+```
+analyze_history()     → Reads .problemSiteData.json, counts problems per topic,
+                        flags topics with fewer than 2 problems solved
+
+search_youtube()      → Finds real NeetCode/YouTube videos for each problem
+                        via the Serper API
+
+generate_study_plan() → Writes a dated Markdown plan to study_plan/
+```
+
+## Troubleshooting
+
+**429 Rate limit error** — You've hit the daily request limit on your free tier. Switch to a model with a higher quota (e.g. `gemini-3.1-flash-lite` has 500 requests/day vs 20 for other models). Update `model` in `app/agent.py`.
+
+**Credits depleted error** — Your API key is linked to a billing-enabled project. Create a new API key at [AI Studio](https://aistudio.google.com/apikey) and attach it to a project with no billing.
+
+**Problem data not found** — Make sure you've initialised the submodule (`git submodule update --init --recursive`) and that `.problemSiteData.json` exists in `claude-with-leetcode/`.

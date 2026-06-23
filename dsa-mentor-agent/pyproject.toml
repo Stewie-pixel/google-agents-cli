@@ -1,5 +1,5 @@
 [project]
-name = "customer-support-agent"
+name = "dsa-mentor-agent"
 version = "0.1.0"
 description = ""
 authors = [
