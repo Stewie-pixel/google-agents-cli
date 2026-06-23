@@ -4,6 +4,10 @@ DSA Study Mentor Agent — powered by Google ADK & Gemini
 
 Analyzes your LeetCode solve history, generates a personalized daily study plan with curated problems and YouTube video resources, and conducts mock technical interviews.
 
+## Demo 
+
+https://github.com/user-attachments/assets/9409429f-79f9-4762-87b1-e90f38512e72
+
 ## Prerequisites
 
 - **uv** — [Install](https://docs.astral.sh/uv/)
