@@ -17,6 +17,7 @@
 
 import json
 import os
+import dotenv
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -28,18 +29,15 @@ from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
 
-# ---------------------------------------------------------------------------
-# Path helpers — resolve relative to the claude-with-leetcode submodule
-# which lives one level up from this project.
-# ---------------------------------------------------------------------------
+if Path(".env").exists():
+    dotenv.load_dotenv()
 
-_THIS_DIR = Path(__file__).parent
-_REPO_ROOT = _THIS_DIR.parent  # google-agents-cli root
+_THIS_DIR = Path(__file__).resolve().parent # dsa_mentor_agent/
+_REPO_ROOT = _THIS_DIR.parent.parent # google-agents-cli/
 _LEETCODE_DIR = _REPO_ROOT / "claude-with-leetcode"
 _PROBLEM_DATA_PATH = _LEETCODE_DIR / ".problemSiteData.json"
 _STUDY_PLAN_DIR = _LEETCODE_DIR / "study_plan"
 
-# Topics from the dsa-mentor skill taxonomy that we track coverage for.
 _TRACKED_TOPICS = [
     "Array", "Hash Table", "Sliding Window", "Two Pointers", "Stack",
     "Binary Search", "Linked List", "Tree", "Trie", "Heap", "Priority Queue",
@@ -48,13 +46,8 @@ _TRACKED_TOPICS = [
     "Recursion", "Divide and Conquer", "Matrix", "String",
 ]
 
-# Minimum problems solved in a topic before it is considered "covered"
 _WEAK_THRESHOLD = 2
 
-
-# ---------------------------------------------------------------------------
-# Tool 1: analyze_history
-# ---------------------------------------------------------------------------
 
 def analyze_history() -> str:
     """Reads the local .problemSiteData.json and returns a structured analysis
@@ -68,6 +61,7 @@ def analyze_history() -> str:
         - weak_topics: list of topics with < 2 problems solved
         - covered_topics: list of well-covered topics
     """
+
     if not _PROBLEM_DATA_PATH.exists():
         return json.dumps({
             "error": f"Problem data file not found at {_PROBLEM_DATA_PATH}. "
@@ -86,7 +80,7 @@ def analyze_history() -> str:
             for tracked in _TRACKED_TOPICS:
                 if tracked.lower() in tag.lower():
                     topic_counts[tracked] += 1
-                    break  # avoid double-counting a problem for the same topic
+                    break
 
     all_tracked = {t: topic_counts.get(t, 0) for t in _TRACKED_TOPICS}
     weak_topics = [t for t, c in all_tracked.items() if c < _WEAK_THRESHOLD]
@@ -100,10 +94,6 @@ def analyze_history() -> str:
     }
     return json.dumps(result, indent=2)
 
-
-# ---------------------------------------------------------------------------
-# Tool 2: search_youtube
-# ---------------------------------------------------------------------------
 
 def search_youtube(problem_name: str) -> str:
     """Searches YouTube via the Serper API for a video solution to a LeetCode problem.
@@ -153,10 +143,6 @@ def search_youtube(problem_name: str) -> str:
     return f"- NeetCode channel → {fallback}"
 
 
-# ---------------------------------------------------------------------------
-# Tool 3: generate_study_plan
-# ---------------------------------------------------------------------------
-
 def generate_study_plan(plan_markdown: str) -> str:
     """Saves a generated daily study plan as a Markdown file in the study_plan/ directory.
 
@@ -177,13 +163,9 @@ def generate_study_plan(plan_markdown: str) -> str:
         return f"Error saving study plan: {e}"
 
 
-# ---------------------------------------------------------------------------
-# Agent definition
-# ---------------------------------------------------------------------------
-
 dsa_mentor_agent = Agent(
     name="dsa_mentor_agent",
-    model=Gemini(model="gemini-2.5-flash-lite"),
+    model=Gemini(model="gemini-3.1-flash-lite"),
     description="A DSA Study Mentor that analyzes your LeetCode history and generates a personalized daily study plan.",
     instruction="""You are an expert DSA Study Mentor helping a developer prepare for technical interviews.
 
@@ -246,5 +228,5 @@ Always be encouraging, clear, and beginner-friendly in your explanations.
 
 app = App(
     root_agent=dsa_mentor_agent,
-    name="dsa-mentor-agent",
+    name="app",
 )
