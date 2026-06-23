@@ -1,11 +1,6 @@
 {
     "python-envs.pythonProjects": [
         {
-            "path": "customer-support-agent",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
-        },
-        {
             "path": "dsa-mentor-agent",
             "envManager": "ms-python.python:venv",
             "packageManager": "ms-python.python:pip"
