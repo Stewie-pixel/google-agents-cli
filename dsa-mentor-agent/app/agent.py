@@ -171,6 +171,12 @@ def generate_study_plan(plan_markdown: str) -> str:
     """
     _STUDY_PLAN_DIR.mkdir(parents=True, exist_ok=True)
     date_str = datetime.now().strftime("%Y-%m-%d")
+
+    lines = plan_markdown.splitlines()
+    if lines and lines[0].startswith("# DSA Daily Study Plan"):
+        lines[0] = f"# DSA Daily Study Plan - {date_str}"
+        plan_markdown = '\n'.join(lines)
+        
     filename = _STUDY_PLAN_DIR / f"plan_{date_str}.md"
 
     try:
